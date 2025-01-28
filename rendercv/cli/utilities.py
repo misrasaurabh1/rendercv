@@ -11,6 +11,7 @@ import sys
 import time
 import urllib.request
 from collections.abc import Callable
+from functools import cache
 from typing import Any, Optional
 
 import packaging.version
@@ -20,6 +21,7 @@ import watchdog.observers
 
 from .. import data, renderer
 from . import printer
+from . import utilities as u
 
 
 def set_or_update_a_value(
@@ -499,3 +501,13 @@ def read_and_construct_the_input(
     return update_render_command_settings_of_the_input_file(
         input_file_as_a_dict, cli_render_arguments
     )
+
+
+@cache
+def _get_all_cli_arguments(variables):
+
+    argument_names = list(u.get_default_render_command_cli_arguments().keys())
+    argument_names.remove("__")
+    argument_names.remove("extra_data_model_override_arguments")
+
+    return {name: variables[name] for name in argument_names}
