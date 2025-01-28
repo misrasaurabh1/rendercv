@@ -286,11 +286,8 @@ class PublicationEntryBase(RenderCVBaseModelWithExtraKeys):
     @pydantic.model_validator(mode="after")  # type: ignore
     def ignore_url_if_doi_is_given(self) -> "PublicationEntryBase":
         """Check if DOI is provided and ignore the URL if it is provided."""
-        doi_is_provided = self.doi is not None
-
-        if doi_is_provided:
+        if self.doi:
             self.url = None
-
         return self
 
     @functools.cached_property
