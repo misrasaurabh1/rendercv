@@ -175,10 +175,8 @@ EndDate = Annotated[
 
 def make_keywords_bold_in_a_string(string: str, keywords: list[str]) -> str:
     """Make the given keywords bold in the given string."""
-    replacement_map = {keyword: f"**{keyword}**" for keyword in keywords}
-    for keyword, replacement in replacement_map.items():
-        string = string.replace(keyword, replacement)
-
+    for keyword in keywords:
+        string = string.replace(keyword, f"**{keyword}**")
     return string
 
 
