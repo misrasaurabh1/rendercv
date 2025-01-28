@@ -3,15 +3,17 @@ The `rendercv.cli.commands` module contains all the command-line interface (CLI)
 commands of RenderCV.
 """
 
-import copy
 import pathlib
+from functools import cache
 from typing import Annotated, Optional
 
 import typer
 from rich import print
 
 from .. import __version__, data
-from . import printer, utilities
+from . import printer
+from . import utilities
+from . import utilities as u
 
 app = typer.Typer(
     rich_markup_mode="rich",
@@ -31,8 +33,6 @@ app = typer.Typer(
         "Render a YAML input file. Example: [yellow]rendercv render"
         " John_Doe_CV.yaml[/yellow]. Details: [cyan]rendercv render --help[/cyan]"
     ),
-    # allow extra arguments for updating the data model (for overriding the values of
-    # the input file):
     context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
 )
 @printer.handle_and_print_raised_exceptions
@@ -159,14 +159,8 @@ def cli_command_render(
     original_working_directory = pathlib.Path.cwd()
     input_file_path = pathlib.Path(input_file_name).absolute()
 
-    from . import utilities as u
 
-    argument_names = list(u.get_default_render_command_cli_arguments().keys())
-    argument_names.remove("_")
-    argument_names.remove("extra_data_model_override_arguments")
-    # This is where the user input is accessed and stored:
-    variables = copy.copy(locals())
-    cli_render_arguments = {name: variables[name] for name in argument_names}
+    cli_render_arguments = _get_all_cli_arguments(locals())
 
     input_file_as_a_dict = u.read_and_construct_the_input(
         input_file_path, cli_render_arguments, extra_data_model_override_arguments
@@ -305,7 +299,7 @@ def cli_command_create_theme(
     if based_on not in data.available_themes:
         printer.error(
             f'The theme "{based_on}" is not in the list of available themes:'
-            f" {', '.join(data.available_themes)}"
+            f' {", ".join(data.available_themes)}'
         )
 
     theme_folder = utilities.copy_templates(
@@ -348,3 +342,13 @@ def cli_command_no_args(
         there_is_a_new_version = printer.warn_if_new_version_is_available()
         if not there_is_a_new_version:
             print(f"RenderCV v{__version__}")
+
+
+@cache
+def _get_all_cli_arguments(variables):
+
+    argument_names = list(u.get_default_render_command_cli_arguments().keys())
+    argument_names.remove("__")
+    argument_names.remove("extra_data_model_override_arguments")
+
+    return {name: variables[name] for name in argument_names}
